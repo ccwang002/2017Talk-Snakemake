@@ -1,0 +1,4 @@
+node_modules/
+.python-version
+.Rproj.user
+package-lock.json
