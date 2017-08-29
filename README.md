@@ -3,7 +3,7 @@
 ## Theme customization
 
 ```scss
-# styles/_defaults.scss
+// styles/_defaults.scss
 $color: #72AEC2;
 ```
 
