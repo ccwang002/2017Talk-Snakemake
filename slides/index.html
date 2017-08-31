@@ -16,52 +16,52 @@
 	<meta name="twitter:image" content="https://blog.liang2.tw/2016Talk-Genomics-in-R/pics/modPlot_GAPDH.png">
 	-->
 	<!-- Icon -->
-	<link href="pics/twR_logo.png" rel="icon" type="image/x-icon" />
+	<link href="pics/snakemake_logo.svg" rel="icon" type="image/x-icon" />
 	<!-- CSS Stle -->
 	<link rel="stylesheet" href="lib/shower/themes/styles/screen-16x10.css">
 	<link rel="stylesheet" href="lib/highlight/styles/github.css" type="text/css"/>
-	<style>
-		.caption p {
-			font-size: 0.6em;
-		}
-		.slide.mid h2 {
-			font-size: 110px;
-			font-family: Roboto Light;
-			font-weight: 300;
-			color: white;
-			line-height: 1.25em;
-			text-shadow: 1px 1px 3px black;
-			top: 36%;
-			position: absolute;
-		}
-		.citation pre {
-			text-align: left;
-		}
-		pre.medium {
-			font-size: 0.75em;
-		}
-		pre.medium code {
-			line-height: 1.5em;
-		}
-		pre.small {
-			font-size: 0.5em;
-		}
-		pre.small code {
-			line-height: 1.5em;
-		}
+		<style>
+			.caption p {
+				font-size: 0.6em;
+			}
+			.slide.mid h2 {
+				font-size: 110px;
+				font-family: Roboto Light;
+				font-weight: 300;
+				color: white;
+				line-height: 1.25em;
+				text-shadow: 1px 1px 3px black;
+				top: 36%;
+				position: absolute;
+			}
+			.citation pre {
+				text-align: left;
+			}
+			pre.medium {
+				font-size: 0.75em;
+			}
+			pre.medium code {
+				line-height: 1.5em;
+			}
+			pre.small {
+				font-size: 0.5em;
+			}
+			pre.small code {
+				line-height: 1.5em;
+			}
 
-		.sidenote {
-			border: 2px dashed #9e9e9e;
-			position: absolute;
-			padding: 1em;
-			line-height: 1.5em;
-			color: #9e9e9e;
-		}
-		.sidenote p {
-			margin-bottom: 0px;
-		}
+			.sidenote {
+				border: 2px dashed #9e9e9e;
+				position: absolute;
+				padding: 1em;
+				line-height: 1.5em;
+				color: #9e9e9e;
+			}
+			.sidenote p {
+				margin-bottom: 0px;
+			}
 
-	</style>
+		</style>
 </head>
 <body class="shower list">
 	<!-- Header in overview -->
@@ -104,7 +104,7 @@
 				position: absolute;
 			}
 			#talk-author a,
-			#cover .back-to-overview:hover {
+			#cover .back-to-overview {
 				color: #EDDC1C;
 			}
 			#cover p {
@@ -131,15 +131,272 @@
 				background: black;
 			}
 			#cover .back-to-overview {
-				color: inherit; /* blue colors for links too */
+				color: #EDDC1C;
 				text-decoration: inherit; /* no underline */
 			}
 		</style>
 	</section>
 
-	<!-- Section: Snakemake -->
-	<section class="slide">
-		<h2 class="shout">Snakemake</h2>
+	<!-- Section: Intro -->
+	<section id="what-is-snakemake" class="slide twocol l80">
+		<div class="left">
+			<h2>What is Snakemake?</h2>
+			<p><a href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a> is a Python-based workflow management tool.</p>
+			<ul>
+				<li>A workflow contains a set of <strong>rules</strong></li>
+				<li>A rule describes how to creat output files/patterns<br>from input files/pattern</li>
+				<li>The workflow file runs like a Python script</li>
+				<ul>
+					<li>Can import external Python libraries</li>
+					<li>Can write one's own functions</li>
+				</ul>
+			</ul>
+		</div>
+		<div class="right">
+			<img src="pics/snakemake_logo.svg" alt="">
+		</div>
+	</section>
+
+	<section id="how-snakemake-runs" class="slide">
+		<h2>How does Snakemake work?</h2>
+		<ol>
+			<li>Given the final output files, snakemake will find the rule that generates them</li>
+			<li>The rule will specify the required input files</li>
+			<li>If the input files exist, then we are good to run the commands</li>
+			<li>If some input does not exist but there are rules to generate them, use those rules to find the required input files</li>
+			<li>Repeat the process until all outputs can be generated from existing files</li>
+			<li>Snakemake will start running the corresponding commands</li>
+		</ol>
+	</section>
+
+	<section id="snakemake-in-action" class="slide">
+		<h2>Run snakemake in action</h2>
+		<p>Write RNA-seq pipeline in Snakemake to assess transcript abundance:</p>
+		<ol>
+			<li>Build the alignment index</li>
+			<li>Map sample reads to genome</li>
+			<li>Assess sample's transcript abundance</li>
+		</ol>
+		<p>Tools to use: HISAT2 + StringTie (<a href="https://www.nature.com/nprot/journal/v11/n9/full/nprot.2016.095.html">new Tuxedo pipeline</a>)</p>
+	</section>
+
+	<!-- Section: Setup -->
+	<section id="setup-cover" class="slide">
+		<h2 class="shout">Setup</h2>
+	</section>
+
+	<section id="setup-overview" class="slide">
+		<h2>Setup the environment</h2>
+		<p>We will use Python 3.6 and install all the tools using <a href="https://bioconda.github.io/">bioconda</a>.<br>
+			Before continue, make sure one has a working:</p>
+		<ul>
+			<li><strong><a href="https://conda.io/miniconda.html">Conda</a></strong> (any miniconda or anaconda 2/3)</li>
+			<li><strong><a href="https://www.docker.com/">Docker</a></strong></li>
+			<li>Access to <strong><a href="https://console.cloud.google.com/">Google Cloud Console</a></strong> and create VM instances.</li>
+		</ul>
+	</section>
+
+	<section id="setup-dir" class="slide">
+		<h2>Working directory and example data</h2>
+		<p>Everything will be under <code>~/snakemake_example</code></p>
+		<p>Example data from <a href="https://github.com/griffithlab/rnaseq_tutorial/">Griffith Lab’s RNA-seq tutorial</a>: 2 conditions, 3 repeats.</p>
+		<pre class="language-bash medium"><code>cd ~/snakemake_example
+wget https://storage.googleapis.com/dinglab/lbwang/snakemake_demo/griffithlab_brain_vs_uhr.tar.gz
+tar xf griffithlab_brain_vs_uhr.tar.gz</code></pre>
+	</section>
+
+	<section id="setup-bioconda" class="slide">
+		<h2>Setup Bioconda</h2>
+		<p><a href="https://bioconda.github.io/">Bioconda</a> is a conda channel providing many bioinfomatics software.</p>
+		<pre class="language-bash"><code>conda config --add channels defaults
+conda config --add channels conda-forge
+conda config --add channels bioconda</code>
+		</pre>
+	</section>
+
+	<section id="setup-conda-env" class="slide">
+		<h2>Create a conda env</h2>
+		<p>Conda env can isolate all the tools so one can run multiple pipelines without worrying about version conflict of a same tool.<br>
+			Create an env called <code>new-tuxedo</code> to install all the required tools for this pipeline.</p>
+		<pre class="language-shell"><code>conda create -n new_tuxedo \
+    python=3.6 snakemake hisat2 stringtie samtools</code></pre>
+	</section>
+
+	<section id="setup-conda-env-contd" class="slide">
+		<h2>Use the conda env</h2>
+		<pre class="language-bash"><code>$ source activate new_tuxedo       # Use the conda env
+(new_tuxedo) $ hisat2 --version
+~/miniconda3/envs/new_tuxedo/bin/hisat2-align-s version 2.1.0
+(new_tuxedo) $ deactivate           # Exit the env
+
+# The tool is not available outside
+$ hisat2 --version
+bash: hisat2: command not found</code></pre>
+	</section>
+
+	<!-- Section: Write the pipeline -->
+	<section id="pipeline-cover" class="slide">
+		<h2 class="shout">Pipeline<br>(Write Snakefile)</h2>
+	</section>
+
+	<section id="pipeline-overview" class="slide">
+		<h2>Pipeline overview</h2>
+		<ol>
+			<li><strong>Build HISAT2 genome reference index for alignment (we are here)</strong></li>
+			<li>Align sample reads to the genome by HISAT2</li>
+			<li>Assess transcript by StringTie</li>
+		</ol>
+		<p>The pipeline will be written to a file <code>Snakefile</code></p>
+	</section>
+
+	<section id="hisat-cmd" class="slide">
+		<h2>How to build HISAT2 index?</h2>
+<pre class="language-bash"><code>hisat2_extract_splice_sites.py genes.gtf > <mark class="important">genes.ss</mark>
+hisat2_extract_exons.py genes.gtf > <mark>genes.exon</mark>
+hisat2-build -p 4 \
+	--ss <mark class="important">genes.ss</mark> --exon <mark>genes.exon</mark> \
+	index_prefix</code></pre>
+		<ul>
+			<li>Index files will be: index_prefix.1.ht2, ..., index_prefix.8.ht2</li>
+			<li>Last comand depends on the output of the first two commands</li>
+		</ul>
+	</section>
+
+	<section id="pipeline-genome-index" class="slide">
+		<h2>Snakemake rules for the first two commands</h2>
+		<pre lang="python" class="medium"><code>rule extract_genome_splice_sites:
+    input: "griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/genes_chr22_ERCC92.gtf"
+    output: "hisat2_index/chr22_ERCC92.ss"
+	shell: "hisat2_extract_splice_sites.py {input} > {output}"
+
+rule extract_genome_exons:
+    input: "griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/genes_chr22_ERCC92.gtf"
+    output: "hisat2_index/chr22_ERCC92.exon"
+	shell: "hisat2_extract_exons.py {input} > {output}"</code></pre>
+	</section>
+
+	<section id="run-snakemake" class="slide">
+		<h2>Try run snakemake</h2>
+		<pre lang="text"><code>snakemake [OPTIONS] [RULE or OUTPUT]
+  -n --dryrun   Don't actually run the pipeline
+  -p            Print the command of each job
+
+snakemake hisat2_index/chr22_ERCC92.ss
+rm hisat2_index/chr22_ERCC92.ss</code></pre>
+	</section>
+
+	<section id="pipeline-genome-index-contd" class="slide tighter">
+		<h2>For the third command</h2>
+<pre lang="python" class="medium"><code>rule build_hisat_index:
+    input:
+        genome_fa="griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/chr22_ERCC92.fa",
+        splice_sites="hisat2_index/chr22_ERCC92.ss",
+        exons="hisat2_index/chr22_ERCC92.exon",
+    output: expand("hisat2_index/chr22_ERCC92.{ix}.ht2", ix=range(1, 9))
+    shell:
+        "hisat2-build -p 4 {input.genome_fa} "
+        "--ss {input.splice_sites} --exon {input.exons} "
+        "hisat2_index/chr22_ERCC92"</code></pre>
+<p><code>expand()</code> is a Snakemake utility function. Run snakemake again by:</p>
+<pre lang="bash"><code>snakemake -p build_hisat_index</code></pre>
+	</section>
+
+	<section id="pipeline-overview-2" class="slide">
+		<h2>Move on to alignment</h2>
+		<ol>
+			<li>Build HISAT2 genome reference index for alignment</li>
+			<li><strong>Align sample reads to the genome by HISAT2 (we are here)</strong></li>
+			<li>Assess transcript by StringTie</li>
+		</ol>
+	</section>
+
+	<section id="hisat-align-cmd" class="slide">
+		<h2>How to use HISAT2 for alignment?</h2>
+		<p>For each sample, supply their pair-end FASTQs and index, and pipe the output to samtools.
+			Output will be a BAM file per sample.</p>
+<pre class="language-text"><code>hisat2 -p 4 --dta -x index_prefix \
+    -1 sample_r1.fastq -2 sample_r2.fastq | \
+	samtools sort -@ 4 -o sample.bam</code></pre>
+		<p>How to apply a rule for different samples?</p>
+	</section>
+
+	<section id="pipeline-align" class="slide">
+		<pre class="language-python medium">
+<code>rule align_hisat:
+    input:
+        fq1="griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/{sample}.read1.fastq.gz",
+        fq2="griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/{sample}.read2.fastq.gz",
+        hisat2_index=expand("hisat2_index/chr22_ERCC92.{ix}.ht2", ix=range(1, 9)),
+    output: "align_hisat2/{sample}.bam"
+    threads: 4
+    shell:
+        "hisat2 -p {threads} --dta -x hisat2_index/chr22_ERCC92 "
+        "-1 {input.fq1} -2 {input.fq2} | "
+		"samtools sort -@ {threads} -o {output}"</code>
+		</pre>
+		<ul>
+			<li><code>threads</code> entry specifies how many CPUs the rule will use.</li>
+			<li><code>{sample}</code> is a wildcard so similar outputs can share a rule.</li>
+		</li>
+	</section>
+
+	<section id="wildard" class="slide tighter">
+		<h2>More on wildcard</h2>
+		<pre class="language-python medium">
+<code>rule simple:
+    input:
+        fq1=".../{sample}.read1.fastq.gz",
+        fq2=".../{sample}.read2.fastq.gz",
+    output: "out/{sample}.bam"
+    threads: 4
+    shell:
+		"mycmd process {input.fq1} {input.fq2} > {output}"</code>
+		</pre>
+		<p>While run <code>snakemake out/A.bam</code>, it matches the output pattern and knows <code>sample = A</code> and replace all the wildcard</p>
+		<p>But how to apply to all samples? or to get all the name of the samples?</p>
+	</section>
+
+	<section id="glob" class="slide">
+		<h2>To get all the samples' name</h2>
+		<pre class="language-python medium">
+<code>SAMPLES, *_ = glob_wildcards(
+    'griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/'
+	'{sample}.read1.fastq.gz')
+
+rule align_all_samples:
+    input: expand("align_hisat2/{sample}.bam", sample=SAMPLES)</code>
+		</pre>
+		<p class="note">One can always hard code <code>SAMPLES = ['A', 'B', ...]</code></p>
+		<pre lang="bash"><code>snakemake -j 8 -p align_all_samples</code></pre>
+	</section>
+
+	<section id="dag" class="slide">
+		<h2>How Snakemake resolves jobs</h2>
+		<p>When Snakemake is figuring out what input are required to generate the desired output, a DAG is created along the way.</p>
+		<div class="citation">
+			<img src="pics/align_dag.svg" class="fill w" alt="">
+		</div>
+		<p>Each node in the DAG represent a job. Job that has its dependency ready can be run in parallel, say, no connected edges.</p>
+	</section>
+
+	<section id="pipeline-stringtie" class="slide">
+		<h2>Move on to transcript assessment</h2>
+		<ol>
+			<li>Build HISAT2 genome reference index for alignment</li>
+			<li>Align sample reads to the genome by HISAT2</li>
+			<li><strong>Assess transcript by StringTie (we are here)</strong></li>
+		</ol>
+		<p>Download <a href="https://gist.github.com/ccwang002/2659b19439b6205284c0ae68ca06345d">the full Snakefile</a> to save some keystrokes.</p>
+	</section>
+
+	<!-- Section: Conclusion -->
+	<section id="futher-reading" class="slide">
+		<h2>Futher reading</h2>
+		<ul>
+			<li><a href="https://snakemake.readthedocs.io/en/stable/index.html">Snakemake's official documentation</a></li>
+			<li><a href="http://slides.com/johanneskoester/snakemake-broad-2015">High-level introduction of Snakemake</a></li>
+			<li><a href="https://blog.liang2.tw/posts/2017/08/snakemake-google-cloud/">My blog post to demonstrate more computing scenarios with Docker on Google Cloud</a></li>
+		</ul>
 	</section>
 
 	<!-- Section: About me -->
@@ -148,7 +405,7 @@
 			<h2>About Me</h2>
 			<ul>
 				<li>Liang-Bo Wang, aka Bobo or Liang<sup>2</sup></li>
-				<li>Computational Biology PhD student in <a href="http://dinglab.wustl.edu/">Ding Lab at WUSTL</a></li>
+				<li>Computational and Systems Biology PhD student in <a href="http://dinglab.wustl.edu/">Ding Lab at WUSTL</a></li>
 				<li>Speak Python and R</li>
 			</ul>
 		</div>
