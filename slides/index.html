@@ -77,7 +77,7 @@
 			By <a href="http://liang2.tw" target="_blank">Bobo (Liang<sup>2</sup>)</a> under CC 4.0 BY license
 		</p>
 		<p id="usage-instr">
-			<kbd>Esc</kbd> to overview <br>
+			<kbd>Esc</kbd> to <a class="back-to-overview" href="javascript:Podium.keydown(27);">overview</a><br>
 			<kbd>←</kbd> <kbd>→</kbd> to navigate
 		</p>
 		<img src="pics/cover.jpg" class="cover w" alt="">
@@ -103,7 +103,8 @@
 				bottom: 120px;
 				position: absolute;
 			}
-			#talk-author a {
+			#talk-author a,
+			#cover .back-to-overview:hover {
 				color: #EDDC1C;
 			}
 			#cover p {
@@ -128,6 +129,10 @@
 			}
 			#cover {
 				background: black;
+			}
+			#cover .back-to-overview {
+				color: inherit; /* blue colors for links too */
+				text-decoration: inherit; /* no underline */
 			}
 		</style>
 	</section>
@@ -189,6 +194,41 @@
 	<script src="lib/highlight/highlight.pack.js" type="text/javascript" charset="utf-8"></script>
 	<script>
 		hljs.initHighlightingOnLoad();
+	</script>
+	<script>
+		// Emulate Esc key for special links so on mobile user can go back to list view
+		// A long term solution is to wait for Shower.js to expose its API
+		// Simulate Esc key solution from SO: https://stackoverflow.com/a/10520017
+		Podium = {};
+		Podium.keydown = function(k) {
+			var oEvent = document.createEvent('KeyboardEvent');
+
+			// Chromium Hack
+			Object.defineProperty(oEvent, 'keyCode', {
+						get : function() {
+							return this.keyCodeVal;
+						}
+			});
+			Object.defineProperty(oEvent, 'which', {
+						get : function() {
+							return this.keyCodeVal;
+						}
+			});
+
+			if (oEvent.initKeyboardEvent) {
+				oEvent.initKeyboardEvent("keydown", true, true, document.defaultView, false, false, false, false, k, k);
+			} else {
+				oEvent.initKeyEvent("keydown", true, true, document.defaultView, false, false, false, false, k, 0);
+			}
+
+			oEvent.keyCodeVal = k;
+
+			if (oEvent.keyCode !== k) {
+				alert("keyCode mismatch " + oEvent.keyCode + "(" + oEvent.which + ")");
+			}
+
+			document.dispatchEvent(oEvent);
+		}
 	</script>
 	<!-- Mathjax -->
 	<!-- online Mathjax CDN -->
