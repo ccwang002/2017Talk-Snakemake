@@ -8,6 +8,12 @@ $color: #72AEC2;
 ```
 
 
+## Develop the slides
+
+    npm install
+    npm run dev
+
+
 ## License
 
 The slides is powered by
