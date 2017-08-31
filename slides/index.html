@@ -389,13 +389,141 @@ rule align_all_samples:
 		<p>Download <a href="https://gist.github.com/ccwang002/2659b19439b6205284c0ae68ca06345d">the full Snakefile</a> to save some keystrokes.</p>
 	</section>
 
+	<section id="more-features" class="slide">
+		<h2>More features of Snakemake</h2>
+		<ul>
+			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#snakefiles-input-functions">Use function as a intput</a></li>
+			<li><code>log:</code> to <a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#log-files">store log files</a></li>
+			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html">Config and consants</a></li>
+			<li>Use <code>run:</code> instead of <code>shell:</code> for running custom Python snippet</li>
+			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#external-scripts">Use external R/Python script instead of shell command</a></li>
+		</ul>
+	</section>
+
+	<!-- Section: Docker -->
+	<section id="docker-cover" class="slide">
+		<h2 class="shout">Docker</h2>
+	</section>
+
+	<section id="docker" class="slide">
+		<h2>Run snakemake in Docker</h2>
+		<p>Use <a href="https://hub.docker.com/r/lbwang/snakemake-conda-rnaseq/">my image</a> or a minimal working <code>Dockerfile</code>:</p>
+		<pre class="language-docker"><code>FROM continuumio/miniconda3
+RUN conda config --add channels conda-forge \
+    && conda config --add channels bioconda \
+    && conda install -y python=3.6 nomkl \
+        stringtie samtools hisat2 snakemake \
+        google-cloud-storage</code></pre>
+	</section>
+
+	<section class="slide">
+		<pre class="language-bash"><code>cd ~/snakemake_example
+docker run -t                       \
+    -v $(pwd):/analysis             \
+    lbwang/snakemake-conda-rnaseq   \
+    snakemake -j 2 --timestamp      \
+        -s /analysis/Snakefile --directory /analysis \
+        quant_all_samples</code></pre>
+			<ul>
+				<li><code>-v ...</code> maps the current directory to /analysis inside Docker</li>
+				<li><code>-s ...</code> lets snakemake find the current Snakefile and working dir</li>
+			</ul>
+	</section>
+
+	<!-- Section: Google Cloud -->
+	<section id="gcloud-cover" class="slide">
+		<h2 class="shout">Google Cloud</h2>
+	</section>
+
+	<section id="gcloud-setup" class="slide">
+		<h2>Google Cloud Setup</h2>
+		<ul>
+			<li>A writable Google Cloud Storage <strong>(GS) bucket/path</strong><br>
+				Say, <code>gs://dinglab/lbwang/snakemake_demo/</code></li>
+			<li>A Google Cloud Compute <strong>(GCE) VM instance</strong></li>
+			<ul>
+				<li>10GB disk space</li>
+				<li>Has write access to that GS bucket/path</li>
+				<li><strong>Docker</strong> installed</li>
+			</ul>
+			<li>An empty working directory at <code>~/snakemake_example</code></li>
+		</ul>
+	</section>
+
+	<section id="gcloud-snakemake" class="slide">
+		<h2>Let Snakemake use remote files</h2>
+<pre class="language-python"><code>from snakemake.remote.GS import RemoteProvider \
+	as GSRemoteProvider
+GS = GSRemoteProvider()
+
+rule xxx:
+	input: GS.remote("yourbucket/path/to/file")</code></pre>
+	</section>
+
+	<section class="slide">
+		<h2>It's tedious to change all the paths</h2>
+		<p>Snakemake allow user to pass <code>--default-remote-provider</code> and <code>--default-remote-prefix</code> so all the local path will be on GS.</p>
+		<p>Still, one will need to upload the input files.<br>Luckily, I've uploaded a copy on GS already :) <code>gs://lbwang-playground/snakemake_rnaseq</code></p>
+	</section>
+
+	<section class="slide fullpage">
+	<pre class="language-bash medium"><code><mark>gsutil ls -r gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/</mark>
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/:
+
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/:
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/chr22_ERCC92.fa
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/genes_chr22_ERCC92.gtf
+
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/:
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/xxx.fastq.gz
+...
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/xxx.fastq.gz</code></pre>
+	</section>
+
+	<section id="remote-snakefile" class="slide">
+		<h2>Modify our Snakefile</h2>
+		<p>The modified Snakefile can be found <a href="https://gist.github.com/ccwang002/2686840e90574a67a673ec4b48e9f036">here</a>. Some changes:</p>
+		<ul>
+			<li>I host all the input source files (not the tarfile) on GS using <code>GS.remote(...)</code></li>
+			<li>Modify <code>FULL_HISAT2_INDEX_PREFIX</code> in the file to be <code>{WRITABLE_BUCKET_PATH}/hisat2_index/chr22_ERCC92</code></li>
+		</ul>
+	</section>
+
+	<section class="slide">
+<pre class="language-bash"><code>docker run -t -i                           \
+    -v $(pwd):/analysis                         \
+    -v ~/.config/gcloud:/root/.config/gcloud    \
+    lbwang/snakemake-conda-rnaseq               \
+    snakemake -j 4 --timestamp --verbose -p --keep-remote   \
+        -s /analysis/Snakefile --directory /analysis        \
+		--default-remote-provider GS                        \
+		--default-remote-prefix "{WRITABLE_BUCKET_PATH}"    \
+        quant_all_samples</code></pre>
+	</section>
+
+	<section class="slide tighter">
+<pre class="language-text"><code>~/snakemake_example
+├── lbwang-playground/
+│   └── snakemake_rnaseq/
+│       └── griffithlab_brain_vs_uhr/
+│           ├── GRCh38_Ens87_chr22_ERCC/
+│           └── HBR_UHR_ERCC_ds_10pc/
+├── {WRITABLE_BUCKET_PATH}/
+│   ├── align_hisat2/
+│   ├── hisat2_index/
+│   └── stringtie/
+└── Snakefile</code></pre>
+	</section>
+
+	<!-- TODO: how snakemake works on gs -->
+
 	<!-- Section: Conclusion -->
 	<section id="futher-reading" class="slide">
 		<h2>Futher reading</h2>
 		<ul>
 			<li><a href="https://snakemake.readthedocs.io/en/stable/index.html">Snakemake's official documentation</a></li>
 			<li><a href="http://slides.com/johanneskoester/snakemake-broad-2015">High-level introduction of Snakemake</a></li>
-			<li><a href="https://blog.liang2.tw/posts/2017/08/snakemake-google-cloud/">My blog post to demonstrate more computing scenarios with Docker on Google Cloud</a></li>
+			<li><a href="https://blog.liang2.tw/posts/2017/08/snakemake-google-cloud/">My blog post covering the same pipeline in detail</a></li>
 		</ul>
 	</section>
 
