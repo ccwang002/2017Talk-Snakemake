@@ -405,9 +405,18 @@ rule align_all_samples:
 		<h2 class="shout">Docker</h2>
 	</section>
 
-	<section id="docker" class="slide">
-		<h2>Run snakemake in Docker</h2>
-		<p>Use <a href="https://hub.docker.com/r/lbwang/snakemake-conda-rnaseq/">my image</a> or a minimal working <code>Dockerfile</code>:</p>
+	<section id="sakemake-in-docker" class="slide">
+		<h2>Run Snakemake in Docker</h2>
+		<ul>
+			<li>We need to pack Snakemake and all the tools inside a Docker image</li>
+			<li>Map the Snakefile and working directory inside Docker</li>
+			<li>Rest of the setup is the same</li>
+		</ul>
+	</section>
+
+	<section id="docker-image" class="slide">
+		<h2>Make a Docker image</h2>
+		<p>Use <a href="https://hub.docker.com/r/lbwang/snakemake-conda-rnaseq/">my Docker image</a> or a minimal working <code>Dockerfile</code>:</p>
 		<pre class="language-docker"><code>FROM continuumio/miniconda3
 RUN conda config --add channels conda-forge \
     && conda config --add channels bioconda \
@@ -416,7 +425,7 @@ RUN conda config --add channels conda-forge \
         google-cloud-storage</code></pre>
 	</section>
 
-	<section class="slide">
+	<section id="run-snakemake-in-docker" class="slide tighter">
 		<pre class="language-bash"><code>cd ~/snakemake_example
 docker run -t                       \
     -v $(pwd):/analysis             \
@@ -426,7 +435,8 @@ docker run -t                       \
         quant_all_samples</code></pre>
 			<ul>
 				<li><code>-v ...</code> maps the current directory to /analysis inside Docker</li>
-				<li><code>-s ...</code> lets snakemake find the current Snakefile and working dir</li>
+				<li><code>-s ...</code> lets Snakemake find the mapped Snakefile<br>
+					<code>--directory</code> ...  and working dir</li>
 			</ul>
 	</section>
 
@@ -452,22 +462,36 @@ docker run -t                       \
 
 	<section id="gcloud-snakemake" class="slide">
 		<h2>Let Snakemake use remote files</h2>
-<pre class="language-python"><code>from snakemake.remote.GS import RemoteProvider \
+		<pre class="language-python">
+<code>from snakemake.remote.GS import RemoteProvider \
 	as GSRemoteProvider
 GS = GSRemoteProvider()
 
 rule xxx:
-	input: GS.remote("yourbucket/path/to/file")</code></pre>
+    input: GS.remote("readonlybucket/path/to/file")
+	output: GS.remote("writablebucket/path/to/file")</code>
+		</pre>
 	</section>
 
-	<section class="slide">
-		<h2>It's tedious to change all the paths</h2>
-		<p>Snakemake allow user to pass <code>--default-remote-provider</code> and <code>--default-remote-prefix</code> so all the local path will be on GS.</p>
-		<p>Still, one will need to upload the input files.<br>Luckily, I've uploaded a copy on GS already :) <code>gs://lbwang-playground/snakemake_rnaseq</code></p>
+	<section id="gcloud-remote-input" class="slide">
+		<h2>Make all the input files on GS</h2>
+		<p>I've uploaded a copy on Google Cloud Storage already at<br>
+			<code>gs://lbwang-playground/snakemake_rnaseq</code>.</p>
+		<pre class="language-python medium">
+<code>rule align_hisat:
+    input:
+        fastq1=GS.remote("lbwang-playground/.../{sample}.read1.fastq.gz"),
+        fastq2=GS.remote("lbwang-playground/.../{sample}.read2.fastq.gz")
+    output: "align_hisat2/{sample}.bam"
+    shell: ...</code>
+		</pre>
+		<p>Only input/output entries are affected. One can update all paths to be on GS.</p>
 	</section>
 
-	<section class="slide fullpage">
-	<pre class="language-bash medium"><code><mark>gsutil ls -r gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/</mark>
+	<section id="gcloud-input-bucket" class="slide">
+		<h2>All input files on my readonly bucket</h2>
+		<pre class="language-bash small">
+<code><mark class="important">gsutil ls -r gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/</mark>
 gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/:
 
 gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/:
@@ -475,21 +499,45 @@ gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/GRCh38_Ens87_ch
 gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/GRCh38_Ens87_chr22_ERCC/genes_chr22_ERCC92.gtf
 
 gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/:
-gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/xxx.fastq.gz
-...
-gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/xxx.fastq.gz</code></pre>
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/HBR_Rep1_ERCC-Mix2_Build37-ErccTranscripts-chr22.read1.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/HBR_Rep1_ERCC-Mix2_Build37-ErccTranscripts-chr22.read2.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/HBR_Rep2_ERCC-Mix2_Build37-ErccTranscripts-chr22.read1.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/HBR_Rep2_ERCC-Mix2_Build37-ErccTranscripts-chr22.read2.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/HBR_Rep3_ERCC-Mix2_Build37-ErccTranscripts-chr22.read1.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/HBR_Rep3_ERCC-Mix2_Build37-ErccTranscripts-chr22.read2.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/UHR_Rep1_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/UHR_Rep1_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/UHR_Rep2_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/UHR_Rep2_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/UHR_Rep3_ERCC-Mix1_Build37-ErccTranscripts-chr22.read1.fastq.gz
+gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds_10pc/UHR_Rep3_ERCC-Mix1_Build37-ErccTranscripts-chr22.read2.fastq.gz</code>
+		</pre>
+	</section>
+
+	<section id="snakemake-default-remote" class="slide">
+		<h2>Point all the paths under GS</h2>
+		<p>Snakemake allow user to pass <code>--default-remote-provider</code> and <code>--default-remote-prefix</code> so all the local path will be on GS.</p>
+		<ul>
+			<li>For example, when the default remote prefix being<br>
+				<code>dinglab/lbwang/snakemake_demo</code></li>
+			<li>Then the output path <code>align_hisat2/{sample}.bam</code> becomes<br>
+				<code>dinglab/lbwang/snakemake_demo/align_hisat2/{sample}.bam</code></li>
+		</ul>
 	</section>
 
 	<section id="remote-snakefile" class="slide">
 		<h2>Modify our Snakefile</h2>
-		<p>The modified Snakefile can be found <a href="https://gist.github.com/ccwang002/2686840e90574a67a673ec4b48e9f036">here</a>. Some changes:</p>
+		<p>The modified Snakefile can be found <a href="https://gist.github.com/ccwang002/2686840e90574a67a673ec4b48e9f036">here</a>. Changes worth noting:</p>
 		<ul>
-			<li>I host all the input source files (not the tarfile) on GS using <code>GS.remote(...)</code></li>
-			<li>Modify <code>FULL_HISAT2_INDEX_PREFIX</code> in the file to be <code>{WRITABLE_BUCKET_PATH}/hisat2_index/chr22_ERCC92</code></li>
+			<li>Host all the input source files on GS using <code>GS.remote(...)</code></li>
+			<li>Modify <code>FULL_HISAT2_INDEX_PREFIX</code> to be <code>{WRITABLE_BUCKET_PATH}/hisat2_index/chr22_ERCC92</code></li>
+			<ul>
+				<li>A special case of path changing because HISAT2 command doesn't accept the path to the indices but just the prefix.</li>
+			</ul>
 		</ul>
 	</section>
 
-	<section class="slide">
+	<section id="snakemake-in-docker-on-gcloud" class="slide">
 <pre class="language-bash"><code>docker run -t -i                           \
     -v $(pwd):/analysis                         \
     -v ~/.config/gcloud:/root/.config/gcloud    \
@@ -501,8 +549,17 @@ gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds
         quant_all_samples</code></pre>
 	</section>
 
-	<section class="slide tighter">
-<pre class="language-text"><code>~/snakemake_example
+	<section id="snakemake-demo" class="slide black">
+		<video class="cover fill w" controls preload="metadata">
+		<source src="pics/pipeline_demo_6x.mp4" type="video/mp4">
+		Your browser doesn't support HTML5 video in MP4 with H.264.
+		You can still download the <a href="pics/pipeline_demo_6x.mp4">screencast</a> and view it locally.
+		</video>
+	</section>
+
+	<section id="how-snakemake-deals-with-remote-files" class="slide tighter">
+		<pre class="language-text">
+<code>~/snakemake_example
 ├── lbwang-playground/
 │   └── snakemake_rnaseq/
 │       └── griffithlab_brain_vs_uhr/
@@ -512,10 +569,9 @@ gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds
 │   ├── align_hisat2/
 │   ├── hisat2_index/
 │   └── stringtie/
-└── Snakefile</code></pre>
+└── Snakefile</code>
+		</pre>
 	</section>
-
-	<!-- TODO: how snakemake works on gs -->
 
 	<!-- Section: Conclusion -->
 	<section id="futher-reading" class="slide">
