@@ -144,7 +144,7 @@
 			<p><a href="https://snakemake.readthedocs.io/en/stable/">Snakemake</a> is a Python-based workflow management tool.</p>
 			<ul>
 				<li>A workflow contains a set of <strong>rules</strong></li>
-				<li>A rule describes how to creat output files/patterns<br>from input files/pattern</li>
+				<li>A rule describes how to create output files/patterns<br>from input files/pattern</li>
 				<li>The workflow file runs like a Python script</li>
 				<ul>
 					<li>Can import external Python libraries</li>
@@ -387,14 +387,15 @@ rule align_all_samples:
 			<li><strong>Assess transcript by StringTie (we are here)</strong></li>
 		</ol>
 		<p>Download <a href="https://gist.github.com/ccwang002/2659b19439b6205284c0ae68ca06345d">the full Snakefile</a> to save some keystrokes.</p>
+		<p>Run the full pipeline by <code>snakemake -j 8 -p quant_all_samples</code></p>
 	</section>
 
 	<section id="more-features" class="slide">
 		<h2>More features of Snakemake</h2>
 		<ul>
-			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#snakefiles-input-functions">Use function as a intput</a></li>
+			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#snakefiles-input-functions">Use function as a input</a></li>
 			<li><code>log:</code> to <a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#log-files">store log files</a></li>
-			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html">Config and consants</a></li>
+			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/configuration.html">Config and constants</a></li>
 			<li>Use <code>run:</code> instead of <code>shell:</code> for running custom Python snippet</li>
 			<li><a href="https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#external-scripts">Use external R/Python script instead of shell command</a></li>
 		</ul>
@@ -575,7 +576,7 @@ gs://lbwang-playground/snakemake_rnaseq/griffithlab_brain_vs_uhr/HBR_UHR_ERCC_ds
 
 	<!-- Section: Conclusion -->
 	<section id="futher-reading" class="slide">
-		<h2>Futher reading</h2>
+		<h2>Further reading</h2>
 		<ul>
 			<li><a href="https://snakemake.readthedocs.io/en/stable/index.html">Snakemake's official documentation</a></li>
 			<li><a href="http://slides.com/johanneskoester/snakemake-broad-2015">High-level introduction of Snakemake</a></li>
